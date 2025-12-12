@@ -121,31 +121,6 @@ Feature importance chart
 
 Clinical interpretation support
 
-📁 Project Structure
-heart-disease-predictor/
-│
-├── app/
-│   ├── heart_disease_app.py
-│   ├── xgboost_model.pkl
-│   ├── scaler.pkl
-│   └── feature_order.pkl
-│
-├── data/
-│   ├── cleveland_data.csv
-│   └── processed_data.csv
-│
-├── notebooks/
-│   ├── data_exploration.ipynb
-│   ├── model_training.ipynb
-│   └── model_evaluation.ipynb
-│
-├── models/
-│   ├── train_model.py
-│   └── evaluate_model.py
-│
-├── requirements.txt
-└── README.md
-
 🛠️ Installation & Setup
 1. Clone the Repository
 git clone https://github.com/yourusername/heart-disease-predictor.git
