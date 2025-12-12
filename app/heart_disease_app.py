@@ -6,7 +6,7 @@ import joblib
 import traceback
 from typing import Tuple, Dict, List
 
-# --- Page config: wide / fullscreen style ---
+# --- Page config: fullscreen style ---
 st.set_page_config(
     page_title="Heart Disease Predictor - XGBoost Model", 
     layout="wide", 
@@ -14,7 +14,7 @@ st.set_page_config(
     page_icon="❤️"
 )
 
-# Custom CSS for better styling
+# CSS
 st.markdown(
     """
     <style>
@@ -136,11 +136,11 @@ st.markdown(
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin: 0.5rem;
     }
-    /* Fix for input field alignment */
+    /* input field alignment */
     .stNumberInput, .stSelectbox, .stRadio, .stSlider {
         margin-bottom: 1rem;
     }
-    /* Better column spacing */
+    /* column spacing */
     .stColumn {
         padding: 0 1rem;
     }
@@ -149,7 +149,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- Feature Importance Weights (from your XGBoost model) ---
+# --- Feature Importance Weights ---
 FEATURE_IMPORTANCE = {
     'ca': 0.1616,
     'thalach': 0.1597,
@@ -197,7 +197,7 @@ with st.sidebar:
         "Probability threshold for 'High Risk' classification",
         min_value=0.0,
         max_value=1.0,
-        value=0.627,  # Your optimal threshold
+        value=0.627, #threshold value
         step=0.01,
         help="Higher = more conservative (fewer false positives), Lower = more sensitive (catches more cases)"
     )
@@ -270,7 +270,7 @@ with col1:
 with col2:
     st.subheader("Symptoms & Pain")
     
-    # Fixed chest pain options - shorter versions
+    # Chest pain options
     cp_options = [
         "Typical angina (0)",
         "Atypical angina (1)", 
@@ -375,7 +375,7 @@ with col6:
         help="Upsloping = Normal, Downsloping = Abnormal (higher risk)"
     )
 
-# --- Convert inputs to numeric values ---
+# --- Converting inputs to numeric values ---
 input_mapping = {
     'cp': {
         "Typical angina (0)": 0, 
@@ -436,7 +436,7 @@ except Exception as e:
 st.markdown("---")
 st.subheader("📋 Input Summary")
 
-# Create a nice summary table
+# Create a summary table
 summary_data = {
     "Feature": ["Age", "Sex", "Chest Pain", "Exercise Angina", "Thalassemia", 
                 "Major Vessels", "Max HR", "ST Depression", "Resting BP", 
@@ -460,7 +460,7 @@ summary_data = {
 
 summary_df = pd.DataFrame(summary_data)
 
-# Display in a nice table format
+# Display in a table format
 st.dataframe(
     summary_df,
     column_config={
@@ -636,7 +636,7 @@ parameters_to_analyze = [
 parameter_analyses = []
 high_risk_params = []
 
-# Display parameter analysis in a clean box
+# Display parameter analysis in a box
 st.markdown('<div class="parameter-analysis-box">', unsafe_allow_html=True)
 
 for param_name, param_value, unit in parameters_to_analyze:
@@ -661,7 +661,7 @@ for param_name, param_value, unit in parameters_to_analyze:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Add feature importance note
+# feature importance note
 st.caption("💡 **Note**: The most important features for this model are: Number of vessels (ca), Max heart rate (thalach), Thalassemia (thal), Exercise angina (exang), and Age.")
 
 # --- PREDICTION BUTTON ---
