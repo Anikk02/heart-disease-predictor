@@ -1,4 +1,4 @@
-# heart_disease_xgboost_app.py - SECURE VERSION WITH HIDDEN CONFIG
+# heart_disease_xgboost_app.py
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ st.set_page_config(
     page_icon="❤️"
 )
 
-# CSS (Keep ALL your CSS as is)
+# CSS
 st.markdown(
     """
     <style>
@@ -168,22 +168,20 @@ FEATURE_IMPORTANCE = {
     'sex': 0.0153
 }
 
-# --- HIDDEN CONFIGURATION (NOT IN SIDEBAR) ---
 # Load from environment variables or secrets
 class HiddenConfig:
-    # Repository details - loaded from environment/secrets
     REPO_ID = os.getenv("HF_REPO_ID", "")
     HF_TOKEN = os.getenv("HF_TOKEN", "")
     
-    # File names - fixed (not editable by users)
+    # File names
     MODEL_FILENAME = "xgboost_model.pkl"
     SCALER_FILENAME = "scaler.pkl"
     FEATURES_FILENAME = "feature_order.pkl"
     
-    # Cache setting - fixed
+    # Cache setting
     USE_CACHE = True
     
-    # Threshold - can be set as default or from env
+    # Threshold
     DEFAULT_THRESHOLD = 0.627
     
     @classmethod
@@ -200,7 +198,6 @@ class HiddenConfig:
                 except:
                     pass
 
-# Initialize hidden configuration
 config = HiddenConfig()
 config.load_from_secrets()
 
@@ -221,11 +218,10 @@ st.markdown(
 
 st.caption("⚠️ **Important**: This tool provides risk estimates for educational purposes only. It is NOT a medical diagnosis. Always consult healthcare professionals for medical advice.")
 
-# --- SIDEBAR: CLEANED VERSION (NO MODEL CONFIG) ---
+# --- SIDEBAR ---
 with st.sidebar:
     st.header("⚙️ Settings")
     
-    # Only show user-facing settings, NOT model configuration
     st.subheader("🎯 Risk Threshold")
     threshold = st.slider(
         "Probability threshold for 'High Risk' classification",
@@ -258,20 +254,20 @@ with st.sidebar:
         }
         st.info(f"**Clinical significance**: {feature_descriptions[feature_to_view]}")
     
-    # Add model status indicator (optional)
+    #model status indicator
     st.subheader("🔍 Model Status")
     if 'model_loaded' in st.session_state and st.session_state.model_loaded:
         st.success("✅ Model ready")
     else:
         st.info("🔄 Model will load on prediction")
 
-# --- Function to load model from Hugging Face (UPDATED TO USE HIDDEN CONFIG) ---
+# --- Function to load model from Hugging Face ---
 @st.cache_resource(show_spinner=False)
 def load_model_from_huggingface():
     """Load model artifacts from Hugging Face Hub using hidden configuration"""
     
     try:
-        # Validate token for private repository
+        # Validate token for repository
         if not config.HF_TOKEN or config.HF_TOKEN.strip() == "":
             raise ValueError("Hugging Face token is required for private repositories")
         
@@ -324,7 +320,6 @@ def load_model_from_huggingface():
             raise Exception(f"Error loading model: {error_msg}")
 
 # --- MAIN CONTENT: Input Section ---
-# KEEP ALL YOUR EXISTING INPUT CODE EXACTLY AS IS
 st.header("📝 Patient Clinical Parameters")
 
 # Create three columns for better distribution
@@ -572,7 +567,6 @@ st.dataframe(
 )
 
 # --- PARAMETER ANALYSIS SECTION ---
-# KEEP ALL YOUR EXISTING PARAMETER ANALYSIS CODE EXACTLY AS IS
 st.markdown("---")
 st.subheader("🔍 Parameter Analysis")
 
@@ -797,7 +791,6 @@ if predict_button:
             st.success("✅ Prediction completed!")
             
             # --- DISPLAY RESULTS ---
-            # KEEP ALL YOUR EXISTING RESULT DISPLAY CODE EXACTLY AS IS
             st.markdown("---")
             
             # Determine if it's high or low risk
@@ -806,7 +799,7 @@ if predict_button:
             # Use consistent purple gradient for the main card
             prediction_card_class = "prediction-high-risk" if is_high_risk else "prediction-low-risk"
             
-            # Result Card - SIMPLE AND CONSISTENT DESIGN
+            # Result Card
             st.markdown(f"""
             <div class="prediction-card {prediction_card_class}">
                 <h1 style="margin:0; font-size:42px; font-weight:700;">
