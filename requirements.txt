@@ -5,5 +5,4 @@ pandas
 numpy
 joblib
 huggingface-hub
-os
 
