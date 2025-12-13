@@ -17,12 +17,11 @@ Designed for clinicians, researchers, and patients, the system evaluates 13 clin
 
 📈 Adjustable decision threshold for clinical flexibility
 
-🚀 Deployable through Streamlit Cloud, Heroku, or Docker
 
 🧠 Model Overview
 
 Machine Learning Algorithm: XGBoost
-Training Dataset: Cleveland Heart Disease Dataset (UCI)
+Training Dataset: Heart Disease Dataset
 Features Used: 13 standard cardiac risk parameters
 Target: 0 = No Heart Disease, 1 = Heart Disease
 
@@ -120,59 +119,6 @@ Emergency warnings
 Feature importance chart
 
 Clinical interpretation support
-
-🛠️ Installation & Setup
-1. Clone the Repository
-git clone https://github.com/yourusername/heart-disease-predictor.git
-cd heart-disease-predictor
-
-2. Create Virtual Environment
-python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
-
-3. Install Dependencies
-pip install -r requirements.txt
-
-4. Add Model Files to /app
-
-Ensure the following files exist:
-
-xgboost_model.pkl
-
-scaler.pkl
-
-feature_order.pkl
-
-5. Run the Application
-streamlit run app/heart_disease_xgboost_app.py
-
-
-App will open at:
-👉 http://localhost:8501
-
-🚀 Deployment Options
-Streamlit Cloud (Recommended)
-
-Push project to GitHub
-
-Go to https://share.streamlit.io
-
-Connect repo → Deploy
-
-Deploy on Heroku
-pip freeze > requirements.txt
-echo "web: streamlit run app/heart_disease_xgboost_app.py --server.port $PORT" > Procfile
-heroku create heart-disease-app
-git push heroku main
-
-Run with Docker
-FROM python:3.9-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8501
-CMD ["streamlit", "run", "app/heart_disease_xgboost_app.py"]
 
 ⚠️ Medical Disclaimer
 

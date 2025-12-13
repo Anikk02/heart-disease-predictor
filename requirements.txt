@@ -5,3 +5,7 @@ pandas
 numpy
 joblib
 traceback
+huggingface_hub
+tempfile
+os
+

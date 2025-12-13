@@ -1,20 +1,22 @@
-# heart_disease_xgboost_app.py
+# heart_disease_xgboost_app.py - SECURE VERSION WITH HIDDEN CONFIG
 import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
 import traceback
-from typing import Tuple, Dict, List
+import os
+import tempfile
+from huggingface_hub import hf_hub_download, login
 
 # --- Page config: fullscreen style ---
 st.set_page_config(
-    page_title="Heart Disease Predictor - XGBoost Model", 
+    page_title="Heart Disease Predictor", 
     layout="wide", 
     initial_sidebar_state="expanded",
     page_icon="❤️"
 )
 
-# CSS
+# CSS (Keep ALL your CSS as is)
 st.markdown(
     """
     <style>
@@ -166,6 +168,42 @@ FEATURE_IMPORTANCE = {
     'sex': 0.0153
 }
 
+# --- HIDDEN CONFIGURATION (NOT IN SIDEBAR) ---
+# Load from environment variables or secrets
+class HiddenConfig:
+    # Repository details - loaded from environment/secrets
+    REPO_ID = os.getenv("HF_REPO_ID", "")
+    HF_TOKEN = os.getenv("HF_TOKEN", "")
+    
+    # File names - fixed (not editable by users)
+    MODEL_FILENAME = "xgboost_model.pkl"
+    SCALER_FILENAME = "scaler.pkl"
+    FEATURES_FILENAME = "feature_order.pkl"
+    
+    # Cache setting - fixed
+    USE_CACHE = True
+    
+    # Threshold - can be set as default or from env
+    DEFAULT_THRESHOLD = 0.627
+    
+    @classmethod
+    def load_from_secrets(cls):
+        """Load configuration from Streamlit secrets if available"""
+        if hasattr(st, 'secrets'):
+            if 'HF_TOKEN' in st.secrets:
+                cls.HF_TOKEN = st.secrets['HF_TOKEN']
+            if 'HF_REPO_ID' in st.secrets:
+                cls.REPO_ID = st.secrets['HF_REPO_ID']
+            if 'MODEL_THRESHOLD' in st.secrets:
+                try:
+                    cls.DEFAULT_THRESHOLD = float(st.secrets['MODEL_THRESHOLD'])
+                except:
+                    pass
+
+# Initialize hidden configuration
+config = HiddenConfig()
+config.load_from_secrets()
+
 # --- HEADER ---
 st.markdown(
     """
@@ -183,21 +221,17 @@ st.markdown(
 
 st.caption("⚠️ **Important**: This tool provides risk estimates for educational purposes only. It is NOT a medical diagnosis. Always consult healthcare professionals for medical advice.")
 
-# --- SIDEBAR: Model Settings ---
+# --- SIDEBAR: CLEANED VERSION (NO MODEL CONFIG) ---
 with st.sidebar:
-    st.header("⚙️ Model Configuration")
+    st.header("⚙️ Settings")
     
-    st.subheader("📊 Model Files")
-    model_path = st.text_input("XGBoost Model Path", value="app/xgboost_model.pkl")
-    scaler_path = st.text_input("Scaler Path", value="app/scaler.pkl")
-    features_path = st.text_input("Feature Order Path", value="app/feature_order.pkl")
-    
-    st.subheader("🎯 Decision Threshold")
+    # Only show user-facing settings, NOT model configuration
+    st.subheader("🎯 Risk Threshold")
     threshold = st.slider(
         "Probability threshold for 'High Risk' classification",
         min_value=0.0,
         max_value=1.0,
-        value=0.627, #threshold value
+        value=config.DEFAULT_THRESHOLD,
         step=0.01,
         help="Higher = more conservative (fewer false positives), Lower = more sensitive (catches more cases)"
     )
@@ -223,8 +257,74 @@ with st.sidebar:
             'oldpeak': 'ST depression induced by exercise'
         }
         st.info(f"**Clinical significance**: {feature_descriptions[feature_to_view]}")
+    
+    # Add model status indicator (optional)
+    st.subheader("🔍 Model Status")
+    if 'model_loaded' in st.session_state and st.session_state.model_loaded:
+        st.success("✅ Model ready")
+    else:
+        st.info("🔄 Model will load on prediction")
+
+# --- Function to load model from Hugging Face (UPDATED TO USE HIDDEN CONFIG) ---
+@st.cache_resource(show_spinner=False)
+def load_model_from_huggingface():
+    """Load model artifacts from Hugging Face Hub using hidden configuration"""
+    
+    try:
+        # Validate token for private repository
+        if not config.HF_TOKEN or config.HF_TOKEN.strip() == "":
+            raise ValueError("Hugging Face token is required for private repositories")
+        
+        # Login to Hugging Face with token
+        login(token=config.HF_TOKEN)
+        
+        cache_dir = None
+        if config.USE_CACHE:
+            cache_dir = tempfile.mkdtemp(prefix="heart_model_")
+        
+        # Download model files with authentication
+        model_path = hf_hub_download(
+            repo_id=config.REPO_ID,
+            filename=config.MODEL_FILENAME,
+            token=config.HF_TOKEN,
+            cache_dir=cache_dir,
+            force_download=False
+        )
+        
+        scaler_path = hf_hub_download(
+            repo_id=config.REPO_ID,
+            filename=config.SCALER_FILENAME,
+            token=config.HF_TOKEN,
+            cache_dir=cache_dir,
+            force_download=False
+        )
+        
+        features_path = hf_hub_download(
+            repo_id=config.REPO_ID,
+            filename=config.FEATURES_FILENAME,
+            token=config.HF_TOKEN,
+            cache_dir=cache_dir,
+            force_download=False
+        )
+        
+        # Load the downloaded files
+        model = joblib.load(model_path)
+        scaler = joblib.load(scaler_path)
+        feature_order = joblib.load(features_path)
+        
+        return model, scaler, feature_order
+        
+    except Exception as e:
+        error_msg = str(e)
+        if "401" in error_msg or "Unauthorized" in error_msg:
+            raise PermissionError("Authentication failed. Please check configuration.")
+        elif "404" in error_msg or "Not Found" in error_msg:
+            raise FileNotFoundError(f"Model resources not found.")
+        else:
+            raise Exception(f"Error loading model: {error_msg}")
 
 # --- MAIN CONTENT: Input Section ---
+# KEEP ALL YOUR EXISTING INPUT CODE EXACTLY AS IS
 st.header("📝 Patient Clinical Parameters")
 
 # Create three columns for better distribution
@@ -329,8 +429,8 @@ with col3:
         format="%.1f",
         help="ST segment depression during exercise (>2.0 indicates higher risk)"
     )
-    
-    # Additional column for remaining inputs
+
+# Additional column for remaining inputs
 col4, col5, col6 = st.columns(3)
 
 with col4:
@@ -472,6 +572,7 @@ st.dataframe(
 )
 
 # --- PARAMETER ANALYSIS SECTION ---
+# KEEP ALL YOUR EXISTING PARAMETER ANALYSIS CODE EXACTLY AS IS
 st.markdown("---")
 st.subheader("🔍 Parameter Analysis")
 
@@ -677,12 +778,13 @@ with col_pred2:
 
 # --- PREDICTION LOGIC ---
 if predict_button:
-    with st.spinner("🔍 Loading XGBoost model and making prediction..."):
+    with st.spinner("🔍 Loading clinical prediction model..."):
         try:
-            # Load model artifacts
-            model = joblib.load(model_path)
-            scaler = joblib.load(scaler_path)
-            feature_order = joblib.load(features_path)
+            # Load model using hidden configuration
+            model, scaler, feature_order = load_model_from_huggingface()
+            
+            # Update session state
+            st.session_state.model_loaded = True
             
             # Scale features
             X_scaled = scaler.transform(features_array)
@@ -695,6 +797,7 @@ if predict_button:
             st.success("✅ Prediction completed!")
             
             # --- DISPLAY RESULTS ---
+            # KEEP ALL YOUR EXISTING RESULT DISPLAY CODE EXACTLY AS IS
             st.markdown("---")
             
             # Determine if it's high or low risk
@@ -944,17 +1047,22 @@ if predict_button:
             Always consult with qualified healthcare professionals for medical diagnosis and treatment.
             """)
             
-        except FileNotFoundError as e:
-            st.error(f"❌ File not found: {str(e)}")
-            st.info("Please ensure model files are in the correct location:")
-            st.code("""
-            Required files:
-            - xgboost_model.pkl (XGBoost model)
-            - scaler.pkl (StandardScaler)
-            - feature_order.pkl (feature names in order)
+        except PermissionError as e:
+            st.error("""
+            ❌ **Authentication Failed**
+            
+            Unable to access the prediction model. Please contact the system administrator.
             """)
+            
+        except FileNotFoundError as e:
+            st.error("""
+            ❌ **Model Not Available**
+            
+            Prediction model resources are currently unavailable.
+            """)
+            
         except Exception as e:
-            st.error(f"❌ Prediction error: {str(e)}")
+            st.error(f"❌ Error: Unable to complete prediction. Please try again later.")
             st.code(traceback.format_exc())
 
 # --- FOOTER ---
@@ -962,7 +1070,6 @@ st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #666; padding: 1rem;">
     <p>❤️ <b>Heart Disease Prediction System</b> | XGBoost Model v1.0</p>
-    <p><small>Model trained on Cleveland Heart Disease dataset | Optimal threshold: 0.627</small></p>
     <p><small>For educational and decision-support purposes only | Not for clinical diagnosis</small></p>
 </div>
 """, unsafe_allow_html=True)
