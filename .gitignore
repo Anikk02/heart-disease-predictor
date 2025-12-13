@@ -1,0 +1,9 @@
+"*" 
+"!app/" 
+"!README.md/" 
+"!requirements.txt/"
+"!secrets.template.toml"
+data/
+*.csv
+*.pkl
+*.json
